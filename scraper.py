@@ -44,65 +44,77 @@ class Scraper:
         Returns:
         tuple: (pd.DataFrame, pd.DataFrame) con la información de frases, autores y etiquetas.
         """
-        try:
-            # Realizar la petición con requests y guardar el contenido de la página
-            frases_to_scrape = requests.get(self.base_url)
-            frases_to_scrape.raise_for_status()  # Para manejar errores HTTP
-        except requests.exceptions.RequestException as e:
-            print(f"Error al realizar la petición: {e}")
-            return pd.DataFrame(), pd.DataFrame()  # Retorna DataFrames vacíos en caso de error
-        
-        # Parsear la información mediante BeautifulSoup
-        soup = BeautifulSoup(frases_to_scrape.text, 'lxml')
-        
-        # Apuntar a los artículos para extraerlos
-        frases_html = soup.find_all('div', attrs={'class': 'quote'})
-        
-        # Lista temporal para guardar las frases y detalles del autor
         data = []
-        
-        # Iterar sobre las frases y obtener las variables
-        for frase in frases_html:
-            contenido_frase = frase.find('span', class_='text').get_text()
-            autor_nombre_completo = frase.find('small', class_='author').get_text()
-            autor_url = frase.find('a')['href']
-            autor_url = self.base_url + autor_url
-            
-            # Extraer detalles del autor
-            details = self.get_author_details(autor_url)
-            
-            # Si los detalles no se pudieron obtener, continuar con el siguiente
-            if details is None:
-                continue
-            
-            # Dividir el nombre completo en nombre y apellido
-            nombres = autor_nombre_completo.split()
-            nombre = nombres[0]
-            apellido = " ".join(nombres[1:]) if len(nombres) > 1 else ""
+        page_number = 1
 
-            # Obtener las etiquetas
-            tags = [tag.get_text() for tag in frase.find_all('a', class_='tag')]
-            tags_ids = []
+        while True:
+            # Construir la URL para la página actual
+            page_url = f"{self.base_url}page/{page_number}/"
+            print(f"Scraping página: {page_url}")
+
+            try:
+                # Realizar la petición con requests y guardar el contenido de la página
+                frases_to_scrape = requests.get(page_url)
+                frases_to_scrape.raise_for_status()  # Para manejar errores HTTP
+            except requests.exceptions.RequestException as e:
+                print(f"Error al realizar la petición: {e}")
+                break
+
+            # Parsear la información mediante BeautifulSoup
+            soup = BeautifulSoup(frases_to_scrape.text, 'lxml')
+
+            # Apuntar a los artículos para extraerlos
+            frases_html = soup.find_all('div', attrs={'class': 'quote'})
+
+            # Si no hay más citas en la página, hemos terminado
+            if not frases_html:
+                break
+
+            # Iterar sobre las frases y obtener las variables
+            for frase in frases_html:
+                contenido_frase = frase.find('span', class_='text').get_text()
+                autor_nombre_completo = frase.find('small', class_='author').get_text()
+                autor_url = frase.find('a')['href']
+                autor_url = self.base_url + autor_url
+                
+                # Extraer detalles del autor
+                details = self.get_author_details(autor_url)
+                
+                # Si los detalles no se pudieron obtener, continuar con el siguiente
+                if details is None:
+                    continue
+                
+                # Dividir el nombre completo en nombre y apellido
+                nombres = autor_nombre_completo.split()
+                nombre = nombres[0]
+                apellido = " ".join(nombres[1:]) if len(nombres) > 1 else ""
+
+                # Obtener las etiquetas
+                tags = [tag.get_text() for tag in frase.find_all('a', class_='tag')]
+                tags_ids = []
+                
+                for tag in tags:
+                    if tag not in self.tags_dict:
+                        self.tags_dict[tag] = self.next_tag_id
+                        self.next_tag_id += 1
+                    tags_ids.append(self.tags_dict[tag])
+                
+                # Añadir la fila con todos los datos
+                temp_row = {
+                    'Frase': contenido_frase,
+                    'Autor_Nombre': nombre,
+                    'Autor_Apellido': apellido,
+                    'Autor_URL': autor_url,
+                    'Author_Born_Date': details['author-born-date'],
+                    'Author_Born_Location': details['author-born-location'],
+                    'Author_Description': details['author-description'],
+                    'Tags': ', '.join(tags),  # Unir etiquetas en una sola cadena
+                    'Tags_IDs': ', '.join(map(str, tags_ids))
+                }
+                data.append(temp_row)
             
-            for tag in tags:
-                if tag not in self.tags_dict:
-                    self.tags_dict[tag] = self.next_tag_id
-                    self.next_tag_id += 1
-                tags_ids.append(self.tags_dict[tag])
-            
-            # Añadir la fila con todos los datos
-            temp_row = {
-                'Frase': contenido_frase,
-                'Autor_Nombre': nombre,
-                'Autor_Apellido': apellido,
-                'Autor_URL': autor_url,
-                'Author_Born_Date': details['author-born-date'],
-                'Author_Born_Location': details['author-born-location'],
-                'Author_Description': details['author-description'],
-                'Tags': ', '.join(tags),  # Unir etiquetas en una sola cadena
-                'Tags_IDs': ', '.join(map(str, tags_ids))
-            }
-            data.append(temp_row)
+            # Avanzar a la siguiente página
+            page_number += 1
         
         # Crear un DataFrame de pandas con toda la información
         frases_df = pd.DataFrame(data)
@@ -132,9 +144,13 @@ if __name__ == "__main__":
     
     frases_df, tags_df = scraper.scrape_quotes()
     
+    # Verificar el número de registros en el DataFrame
+    print(f"Número de registros en frases_df: {len(frases_df)}")
+    print(f"Número de registros en tags_df: {len(tags_df)}")
+    
     # Inspeccionar los DataFrames finales
-    print(frases_df.head(10))
-    print(tags_df.head(10))
+    print(frases_df.head(20))
+    print(tags_df.head(20))
     
     # Guardar los DataFrames en archivos Excel
     scraper.save_to_excel(frases_df, tags_df)
