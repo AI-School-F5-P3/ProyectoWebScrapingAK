@@ -72,9 +72,45 @@ frases_df = pd.DataFrame(frases, columns=['Frase', 'Autor', 'About Autor', 'Tags
 print(frases_df.head(10))    
 
 
-
 # # Guardar el DataFrame en un archivo CSV
 # frases_df.to_csv('frases.csv', index=False, encoding='utf-8')
 
 # # Guardar el DataFrame completo en un archivo Excel
 # frases_df.to_excel('frases_completas.xlsx')
+
+# Función para procesar las tags y crear un DataFrame de tags únicos
+def process_tags(df):
+    """
+    Procesa los datos de la columna 'Tags' del DataFrame para organizar las palabras únicas en una tabla.
+    
+    Args:
+    df (pd.DataFrame): DataFrame que contiene la columna 'Tags'.
+    
+    Returns:
+    pd.DataFrame: DataFrame con las columnas 'tag_id' y 'tag', con una palabra por fila.
+    """
+    # Extraer la columna 'Tags' y concatenar todas las palabras en una sola serie
+    tags = df['Tags'].dropna().explode().str.split(expand=True).stack()
+
+    # Eliminar duplicados y restablecer el índice
+    unique_tags = pd.DataFrame(tags.unique(), columns=['tag']).reset_index()
+    
+    # Renombrar la columna del índice a 'tag_id'
+    unique_tags.rename(columns={'index': 'tag_id'}, inplace=True)
+    
+    # Convertir 'tag_id' a entero
+    unique_tags['tag_id'] = unique_tags['tag_id'].astype(int)
+
+    return unique_tags
+
+# Procesar las tags
+processed_tags_df = process_tags(frases_df)
+
+# Mostrar el DataFrame de tags procesado
+print(processed_tags_df)
+
+# Guardar el DataFrame completo en un archivo Excel
+frases_df.to_excel('frases_completas.xlsx', index=False)
+
+# Guardar el DataFrame de tags procesados en un archivo Excel
+processed_tags_df.to_excel('tags_procesados.xlsx', index=False)
