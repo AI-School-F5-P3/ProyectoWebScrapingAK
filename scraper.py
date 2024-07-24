@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 class Scraper:
     def __init__(self, base_url):
-        self.base_url = base_url
+        self.base_url = base_url #Variable con la dirección del sitio a hacer scraping
         self.tags_dict = {}
         self.next_tag_id = 1
 
@@ -19,14 +19,15 @@ class Scraper:
         dict: Diccionario con 'author-born-date', 'author-born-location' y 'author-description'.
         """
         try:
-            autor_response = requests.get(autor_url)
+            autor_response = requests.get(autor_url)#Realizar la petición con request y guardamos el contenido de la pagina
             autor_response.raise_for_status()
         except requests.exceptions.RequestException as e:
             print(f"Error al obtener la página del autor: {e}")
             return None
         
-        autor_soup = BeautifulSoup(autor_response.text, 'lxml')
+        autor_soup = BeautifulSoup(autor_response.text, 'lxml')#Parsear la información, mediante una instancia de beautiful soup
         
+        #Apuntar a los datos de autor para extraerlos
         born_date = autor_soup.find('span', class_='author-born-date')
         born_location = autor_soup.find('span', class_='author-born-location')
         description = autor_soup.find('div', class_='author-description')
@@ -47,7 +48,7 @@ class Scraper:
         data = []
         page_number = 1
 
-        while True:
+        while True: #Iteración para recorrer todas las páginas del sitio
             # Construir la URL para la página actual
             page_url = f"{self.base_url}page/{page_number}/"
             print(f"Scraping página: {page_url}")
@@ -101,13 +102,13 @@ class Scraper:
                 
                 # Añadir la fila con todos los datos
                 temp_row = {
-                    'Frase': contenido_frase,
-                    'Autor_Nombre': nombre,
-                    'Autor_Apellido': apellido,
-                    'Autor_URL': autor_url,
-                    'Author_Born_Date': details['author-born-date'],
-                    'Author_Born_Location': details['author-born-location'],
-                    'Author_Description': details['author-description'],
+                    'frase_texto': contenido_frase,
+                    'autor_nombre': nombre,
+                    'autor_apellido': apellido,
+                    'autor_url': autor_url,
+                    'autor_fecha_nac': details['author-born-date'],
+                    'autor_lugar_nac': details['author-born-location'],
+                    'autor_descripcion': details['author-description'],
                     'Tags': ', '.join(tags),  # Unir etiquetas en una sola cadena
                     'Tags_IDs': ', '.join(map(str, tags_ids))
                 }
@@ -120,7 +121,7 @@ class Scraper:
         frases_df = pd.DataFrame(data)
         
         # Crear un DataFrame para los tags
-        tags_df = pd.DataFrame(list(self.tags_dict.items()), columns=['tag', 'tag_id'])
+        tags_df = pd.DataFrame(list(self.tags_dict.items()), columns=['tag_texto', 'tag_id'])
         
         return frases_df, tags_df
 
@@ -154,3 +155,10 @@ if __name__ == "__main__":
     
     # Guardar los DataFrames en archivos Excel
     scraper.save_to_excel(frases_df, tags_df)
+
+
+
+    #Función para evitar KeyError al momento de guardar los datos de los df a la bbdd:
+    print("Columnas en frases_df:", frases_df.columns)
+    print("Columnas en tags_df:", tags_df.columns)
+
