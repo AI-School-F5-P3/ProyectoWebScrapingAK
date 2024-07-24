@@ -39,7 +39,9 @@ class AsyncDatabaseManager:
             await conn.execute("""
             CREATE TABLE IF NOT EXISTS frase (
                 frase_id SERIAL PRIMARY KEY,
-                frase TEXT
+                frase_text TEXT UNIQUE,
+                autor_id INTEGER REFERENCES autor(autor_id),
+                tag_id INTEGER REFERENCES tag(tag_id)                                                          
             )
             """)
             await conn.execute("""
@@ -47,16 +49,17 @@ class AsyncDatabaseManager:
                 autor_id SERIAL PRIMARY KEY,
                 autor_nombre VARCHAR(255),
                 autor_apellido VARCHAR(255),
-                autor_url TEXT,
-                autor_fecha_nac DATE,
-                autor_lugar_nac TEXT,
-                autor_descripcion TEXT
+                autor_url VARCHAR(255),
+                autor_fecha_nac VARCHAR(255),
+                autor_lugar_nac VARCHAR(255),
+                autor_descripcion TEXT,
+                UNIQUE (autor_nombre, autor_apellido)
             )
             """)
             await conn.execute("""
             CREATE TABLE IF NOT EXISTS tag (
                 tag_id SERIAL PRIMARY KEY,
-                tag VARCHAR(255) UNIQUE
+                tag_text VARCHAR(255) UNIQUE
             )
             """)
             print("Tablas creadas.")

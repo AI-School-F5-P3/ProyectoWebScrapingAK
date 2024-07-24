@@ -35,29 +35,18 @@ class AsyncDataSaver:
                         await self.conn.execute("""
                         INSERT INTO frase (frase_texto)
                         VALUES ($1)
-                        ON CONFLICT (frase_texto) DO NOTHING
+                        ON CONFLICT (frase_id) DO NOTHING
                         """, row.get('frase_texto'))
                     except Exception as e:
                         print(f"Error al insertar en frase: {e}")
-                        # Si ocurre un error, podrías querer manejarlo aquí
 
                 # Insertar datos en la tabla de autores
-
-                        """Nota:ON CONFLICT: si ya existe un registro en la tabla autor 
-                        con la misma combinación de autor_nombre y autor_apellido, la inserción será ignorada (DO NOTHING)
-                        """
-
-
                 for _, row in frases_df.iterrows():
                     try:
                         await self.conn.execute("""
                         INSERT INTO autor (autor_nombre, autor_apellido, autor_url, autor_fecha_nac, autor_lugar_nac, autor_descripcion)
-                        VALUES ($1, $2, $3, $4, $5,TRIM($6))
-                        ON CONFLICT (autor_nombre, autor_apellido) DO NOTHING 
-                        DO UPDATE SET autor_url = EXCLUDED.autor_url, 
-                            autor_fecha_nac = EXCLUDED.autor_fecha_nac, 
-                            autor_lugar_nac = EXCLUDED.autor_lugar_nac, 
-                            autor_descripcion = EXCLUDED.autor_descripcion
+                        VALUES ($1, $2, $3, $4, $5, TRIM($6))
+                        ON CONFLICT (autor_id) DO NOTHING
                         """, row.get('autor_nombre'), row.get('autor_apellido'),
                            row.get('autor_url'), row.get('autor_fecha_nac'),
                            row.get('autor_lugar_nac'), row.get('autor_descripcion'))
@@ -70,17 +59,15 @@ class AsyncDataSaver:
                         await self.conn.execute("""
                         INSERT INTO tag (tag_id, tag_texto)
                         VALUES ($1, $2)
-                        ON CONFLICT (tag_texto) DO NOTHING
+                        ON CONFLICT (tag_id) DO NOTHING
                         """, row.get('tag_id'), row.get('tag_texto'))
                     except Exception as e:
                         print(f"Error al insertar en tag: {e}")
 
             except asyncpg.PostgresError as e:
                 print(f"Error de PostgreSQL: {e}")
-                # Aquí puedes manejar el error de PostgreSQL específico
             except Exception as e:
                 print(f"Error inesperado: {e}")
-                # Aquí puedes manejar errores inesperados
 
         await self.close()
 
