@@ -62,6 +62,15 @@ class AsyncDatabaseManager:
                 tag_text VARCHAR(255) UNIQUE
             )
             """)
+            await conn.execute("""
+            CREATE TABLE IF NOT EXISTS frase_tag (
+                frase_id INTEGER NOT NULL,
+                tag_id INTEGER NOT NULL,
+                PRIMARY KEY (frase_id, tag_id),  
+                FOREIGN KEY (frase_id) REFERENCES frase(frase_id) ON DELETE CASCADE,
+                FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE  
+            )
+            """)
             print("Tablas creadas.")
         
         except asyncpg.PostgresError as e:
