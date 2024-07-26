@@ -4,3 +4,4 @@ venv/
 myenv/
 __pycache__/
 db.py
+logs/scraper.log
