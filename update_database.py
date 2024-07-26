@@ -5,6 +5,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from scraper import Scraper
 import db  # Asegúrate de que este módulo tenga la configuración de la base de datos
 from save_data_to_db import AsyncDataSaver
+import time  # Para medir el tiempo de ejecución
 
 class DatabaseUpdater:
     def __init__(self, db_name, db_user, db_password, db_host, db_port):
@@ -15,6 +16,7 @@ class DatabaseUpdater:
         self.db_port = db_port
 
     async def update_database(self):
+        start_time = time.time()  # Marca el inicio del proceso
         print("Iniciando actualización de base de datos...")
 
         # Crear una instancia del scraper
@@ -36,9 +38,6 @@ class DatabaseUpdater:
         try:
             async with conn.transaction():
                 # Insertar o actualizar datos en la base de datos
-                # Aquí debes incluir tu código de inserción en la base de datos
-                # Por ejemplo, puedes reutilizar la función save_to_database de AsyncDataSaver
-                # Recuerda definir esta función adecuadamente según la lógica que necesitas.
                 data_saver = AsyncDataSaver(self.db_name, self.db_user, self.db_password, self.db_host, self.db_port)
                 await data_saver.save_to_database(frases_df, tags_df)
                 print("Actualización completada.")
@@ -46,6 +45,10 @@ class DatabaseUpdater:
             print(f"Error durante la actualización: {e}")
         finally:
             await conn.close()
+
+        end_time = time.time()  # Marca el final del proceso
+        elapsed_time = end_time - start_time
+        print(f"Tiempo total de actualización: {elapsed_time:.2f} segundos")
 
 # Configuración del scheduler
 def main():
