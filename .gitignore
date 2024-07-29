@@ -3,3 +3,6 @@ venv/
 .env
 myenv/
 __pycache__/
+db.py
+logs/scraper.log
+.pytest_cache/
