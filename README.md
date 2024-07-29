@@ -75,3 +75,44 @@ Familiarizarse con las técnicas de web scraping y el manejo de bases de datos p
    - Documentar el código y crear un README detallado.
    - Preparar una presentación explicativa para público no técnico.
    - Presentar el código y su funcionamiento a un público técnico, explicando las decisiones de diseño y los desafíos encontrados.
+
+
+# App desarrollada: Frases Célebres
+
+## Descripción
+
+Esta aplicación de Streamlit permite a los usuarios buscar acceder a la información de frases y autores del sitio https://quotes.toscrape.com/ en un formato diferente. Permite filtrar por autor y por tag. También proporciona estadísticas del sitio. Está diseñada para mostrar la aplicación de la técnica de Web Scraping.
+
+## Características
+
+- **Interfaz de usuario intuitiva**: Permite buscar frases, autores, filtrar por autor y por tag.
+- **Visualizaciones interactivas**: Muestra gráficos y datos de manera dinámica.
+
+
+## Instalación
+
+Para ejecutar esta aplicación, sigue estos pasos:
+
+1. Clona el repositorio:
+    ```bash
+    git clone <URL_DEL_REPOSITORIO>
+    cd <NOMBRE_DEL_REPOSITORIO>
+    ```
+
+2. Crea un entorno virtual (opcional pero recomendado):
+    ```bash
+    python -m venv env
+    source env/bin/activate  # En Windows usa `env\Scripts\activate`
+    ```
+
+3. Instala las dependencias:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Uso
+
+Para ejecutar la aplicación, usa el siguiente comando:
+
+```bash
+streamlit run app.py
